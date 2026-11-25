@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isValidOtp, isValidPhone, isWeakPin, requiresOtp, validateRegistration, validateTransfer } from './validators';
+import { isValidOtp, isValidPhone, isWeakPin, requiresOtp, validateBankLink, validateMoneyMove, validateRegistration, validateTransfer } from './validators';
 
 describe('mã PIN', () => {
   it('nhận ra PIN dễ đoán', () => {
@@ -78,5 +78,28 @@ describe('isValidOtp', () => {
     expect(isValidOtp('123456')).toBe(true);
     expect(isValidOtp('12345')).toBe(false);
     expect(isValidOtp('12345a')).toBe(false);
+  });
+});
+
+describe('validateMoneyMove', () => {
+  it('nạp: chỉ kiểm tra hạn mức, không phụ thuộc số dư ví', () => {
+    expect(validateMoneyMove('topup', { bankId: 'b', amount: 10_000 }, { balance: 0 })).toEqual({});
+    expect(validateMoneyMove('topup', { bankId: '', amount: 0 }, { balance: 0 })).toMatchObject({ bankId: expect.any(String), amount: expect.any(String) });
+  });
+
+  it('rút: tối thiểu 50.000 ₫ và không vượt số dư', () => {
+    expect(validateMoneyMove('withdraw', { bankId: 'b', amount: 49_000 }, { balance: 1_000_000 }).amount).toMatch(/tối thiểu/);
+    expect(validateMoneyMove('withdraw', { bankId: 'b', amount: 2_000_000 }, { balance: 1_000_000 }).amount).toMatch(/không đủ/);
+    expect(validateMoneyMove('withdraw', { bankId: 'b', amount: 1_000_000 }, { balance: 1_000_000 })).toEqual({});
+  });
+});
+
+describe('validateBankLink', () => {
+  const knownBank = (code: string) => code === 'VCB';
+  it('kiểm tra ngân hàng và số tài khoản 8–14 chữ số', () => {
+    expect(validateBankLink({ bankCode: 'VCB', accountNumber: '12345678' }, { knownBank })).toEqual({});
+    expect(validateBankLink({ bankCode: 'ABC', accountNumber: '12345678' }, { knownBank }).bankCode).toBeTruthy();
+    expect(validateBankLink({ bankCode: 'VCB', accountNumber: '1234567' }, { knownBank }).accountNumber).toBeTruthy();
+    expect(validateBankLink({ bankCode: 'VCB', accountNumber: '1234 5678' }, { knownBank }).accountNumber).toBeTruthy();
   });
 });

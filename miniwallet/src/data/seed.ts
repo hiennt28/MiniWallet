@@ -147,6 +147,15 @@ export function createDemoAccount(now: Date = new Date()): Account {
     security: { ...INITIAL_SECURITY },
     balance: INITIAL_BALANCE,
     contacts: CONTACTS.map((c) => ({ ...c })),
+    linkedBanks: [
+      {
+        id: 'bank_demo_vcb',
+        bankCode: 'VCB',
+        accountNumber: '0071000456789',
+        holderName: 'NGUYEN VAN AN',
+        linkedAt: new Date(now.getFullYear(), now.getMonth() - 2, 1).toISOString(),
+      },
+    ],
     transactions: createDemoTransactions(now),
     createdAt: new Date(now.getFullYear(), now.getMonth() - 2, 1).toISOString(),
   };

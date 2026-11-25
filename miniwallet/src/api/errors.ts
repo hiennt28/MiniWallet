@@ -13,7 +13,9 @@ export type ApiErrorCode =
   | 'PHONE_TAKEN'
   | 'PIN_INVALID'
   | 'PIN_LOCKED'
-  | 'WALLET_FROZEN';
+  | 'WALLET_FROZEN'
+  | 'BANK_REJECTED'
+  | 'BANK_INSUFFICIENT';
 
 export class ApiError extends Error {
   readonly code: ApiErrorCode;

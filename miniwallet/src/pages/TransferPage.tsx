@@ -1,16 +1,16 @@
 import { useReducer, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
 import { confirmTransfer, createTransfer, resendOtp, toApiError, type ApiErrorCode } from '../api/walletApi';
 import StepIndicator from '../components/transfer/StepIndicator';
 import TransferForm from '../components/transfer/TransferForm';
 import TransferConfirm from '../components/transfer/TransferConfirm';
-import PinStep from '../components/transfer/PinStep';
+import PinConfirm from '../components/auth/PinConfirm';
+import FrozenNotice from '../components/common/FrozenNotice';
 import OtpStep from '../components/transfer/OtpStep';
 import TransferSuccess from '../components/transfer/TransferSuccess';
 import { initialTransferState, transferReducer } from '../components/transfer/transferReducer';
 import { Spinner } from '../components/common/States';
 import { useWallet } from '../context/WalletContext';
-import { digitsOnly, formatPhone, parseAmount } from '../utils/format';
+import { digitsOnly, formatPhone, formatVND, parseAmount } from '../utils/format';
 import { requiresOtp, validateTransfer, type TransferField } from '../utils/validators';
 
 // Các lỗi khiến giao dịch không thể tiếp tục: quay về bước nhập thông tin
@@ -103,20 +103,7 @@ export default function TransferPage() {
     return (
       <div className="page page--narrow">
         {header}
-        <section className="card form">
-          {state.error && (
-            <div className="alert alert--error" role="alert">
-              {state.error}
-            </div>
-          )}
-          <h2 className="card__title">Ví đang bị khóa</h2>
-          <p className="text-muted">Bạn đã khóa ví khẩn cấp nên tạm thời không thể chuyển tiền. Mở khóa bằng mã PIN trong phần Cài đặt.</p>
-          <div>
-            <Link to="/settings" className="btn btn--primary">
-              <span>Đi tới Cài đặt</span>
-            </Link>
-          </div>
-        </section>
+        <FrozenNotice error={state.error} />
       </div>
     );
   }
@@ -156,10 +143,15 @@ export default function TransferPage() {
       )}
 
       {state.step === 'pin' && (
-        <PinStep
-          amount={amount}
-          recipientName={recipient?.name ?? formatPhone(phone)}
-          needsOtp={needsOtp}
+        <PinConfirm
+          idPrefix="transfer"
+          description={
+            <>
+              Xác nhận chuyển <strong>{formatVND(amount)}</strong> đến {recipient?.name ?? formatPhone(phone)}.
+              {needsOtp && ' Sau bước này bạn cần nhập thêm mã OTP.'}
+            </>
+          }
+          submitLabel={needsOtp ? 'Tiếp tục' : 'Xác nhận chuyển'}
           submitting={state.submitting}
           error={state.error}
           onSubmit={handlePin}

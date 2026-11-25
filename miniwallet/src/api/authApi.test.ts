@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { login, logout, register, restoreSession, WELCOME_BONUS } from './authApi';
-import { getDb, migrateV1 } from './db';
+import { getDb, migrateV1, normalizeDatabase } from './db';
 import { onUnauthorized, setToken } from './session';
 import { getTransactions, getWallet, resetData } from './walletApi';
 import { DEMO_PIN, DEMO_PIN_CREDENTIALS, PROFILE } from '../data/seed';
@@ -80,5 +80,16 @@ describe('migrateV1', () => {
     expect(db.version).toBe(2);
     expect(db.accounts[PROFILE.phone]).toMatchObject({ balance: 123_000, pin: DEMO_PIN_CREDENTIALS, security: { frozen: false } });
     expect(db.sessions).toEqual({});
+  });
+});
+
+describe('normalizeDatabase', () => {
+  it('bổ sung linkedBanks cho dữ liệu v2 lưu từ bản cũ chưa có trường này', () => {
+    const db = migrateV1({ balance: 1, profile: { ...PROFILE }, contacts: [], transactions: [] });
+    const account = db.accounts[PROFILE.phone];
+    if (!account) throw new Error('thiếu tài khoản');
+    const { linkedBanks: _removed, ...old } = account;
+    const fixed = normalizeDatabase({ ...db, accounts: { [PROFILE.phone]: old as typeof account } });
+    expect(fixed.accounts[PROFILE.phone]?.linkedBanks).toEqual([]);
   });
 });

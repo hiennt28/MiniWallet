@@ -7,8 +7,10 @@ import {
   formatSignedVND,
   formatVND,
   initials,
+  maskAccountNumber,
   maskPhone,
   parseAmount,
+  toBankHolderName,
 } from './format';
 
 // Intl dùng khoảng trắng đặc biệt (NBSP) trước "₫": chuẩn hóa để so sánh
@@ -63,5 +65,12 @@ describe('tiện ích khác', () => {
     expect(initials('Nguyễn Văn An')).toBe('VA');
     expect(initials('An')).toBe('A');
     expect(initials('')).toBe('?');
+  });
+});
+
+describe('ngân hàng', () => {
+  it('che số tài khoản và tạo tên chủ tài khoản kiểu ngân hàng', () => {
+    expect(maskAccountNumber('0071000456789')).toBe('****6789');
+    expect(toBankHolderName('  Đặng  Thị Hồng ')).toBe('DANG THI HONG');
   });
 });

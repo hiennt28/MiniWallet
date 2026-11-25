@@ -70,6 +70,12 @@ export default function TransactionDetail() {
               <dd>{formatPhone(tx.phone)}</dd>
             </div>
           )}
+          {tx.bankAccount && (
+            <div className="detail-list__row">
+              <dt>Tài khoản ngân hàng</dt>
+              <dd>{tx.bankAccount}</dd>
+            </div>
+          )}
           {tx.note && (
             <div className="detail-list__row">
               <dt>Lời nhắn</dt>

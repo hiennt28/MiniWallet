@@ -42,6 +42,7 @@ export async function register({ name, phone, pin }: RegisterInput): Promise<Pro
     security: { ...INITIAL_SECURITY },
     balance: WELCOME_BONUS,
     contacts: [],
+    linkedBanks: [],
     transactions: [
       {
         id: randomId('tx'),

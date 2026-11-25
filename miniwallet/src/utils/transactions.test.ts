@@ -68,3 +68,20 @@ describe('groupByDate', () => {
     expect(groups).toHaveLength(2);
   });
 });
+
+describe('tiền chuyển nội bộ', () => {
+  it('rút tiền về ngân hàng tính vào tiền ra nhưng không tính là chi tiêu theo danh mục', () => {
+    const withdraw: Transaction = {
+      id: 'w',
+      type: 'expense',
+      category: 'withdraw',
+      title: 'Rút tiền',
+      amount: 1_000_000,
+      status: 'success',
+      createdAt: new Date(2026, 10, 23).toISOString(),
+    };
+    const all = [...list, withdraw];
+    expect(summarizeMonth(all, ref).expense).toBe(1_075_000);
+    expect(expenseByCategory(all, ref)).toEqual([{ category: 'food', total: 75_000 }]);
+  });
+});

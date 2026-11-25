@@ -41,6 +41,7 @@ export function migrateV1(legacy: LegacyDatabaseV1, now: Date = new Date()): Dat
     security: { ...INITIAL_SECURITY },
     balance: legacy.balance,
     contacts: Array.isArray(legacy.contacts) ? legacy.contacts : [],
+    linkedBanks: [],
     transactions: legacy.transactions,
     createdAt: now.toISOString(),
   };
@@ -56,9 +57,18 @@ function readJson(key: string): unknown {
   }
 }
 
+/** Bổ sung các trường được thêm sau này cho dữ liệu v2 lưu từ phiên bản cũ hơn của ứng dụng. */
+export function normalizeDatabase(db: Database): Database {
+  const accounts: Database['accounts'] = {};
+  for (const [phone, account] of Object.entries(db.accounts)) {
+    accounts[phone] = { ...account, linkedBanks: Array.isArray(account.linkedBanks) ? account.linkedBanks : [] };
+  }
+  return { ...db, accounts };
+}
+
 function readStorage(): Database | null {
   const current = readJson(DB_KEY);
-  if (isDatabase(current)) return current;
+  if (isDatabase(current)) return normalizeDatabase(current);
 
   const legacy = readJson(LEGACY_DB_KEY);
   if (isLegacyDatabase(legacy)) {
