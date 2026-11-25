@@ -1,0 +1,453 @@
+/* ===== Giao diện riêng của từng trang ===== */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+.page--narrow {
+  max-width: 560px;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.page-eyebrow {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.page-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  align-self: flex-start;
+  padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-muted);
+  font-weight: 500;
+}
+
+.back-link:hover {
+  color: var(--color-text);
+}
+
+/* --- Tổng quan --- */
+.balance-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--gradient-balance);
+  color: #fff;
+  box-shadow: 0 12px 30px rgb(79 70 229 / 0.25);
+}
+
+.balance-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  opacity: 0.92;
+}
+
+.balance-card__amount {
+  min-height: 2.6rem;
+  font-size: clamp(1.9rem, 5vw, 2.4rem);
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.balance-card__actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.stat {
+  flex-direction: row;
+  align-items: center;
+}
+
+.stat__icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+}
+
+.stat__icon--income {
+  background: var(--color-income-soft);
+  color: var(--color-income);
+}
+
+.stat__icon--expense {
+  background: var(--color-warning-soft);
+  color: var(--color-expense);
+}
+
+.stat__label {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
+.stat__value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .dashboard-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Lịch sử giao dịch --- */
+.filters {
+  gap: 0.85rem;
+}
+
+.filters__search {
+  position: relative;
+  color: var(--color-muted);
+}
+
+.filters__search svg {
+  position: absolute;
+  left: 0.8rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.input--search {
+  padding-left: 2.5rem;
+}
+
+.filters__row {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.filters__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+
+.filters__field .input {
+  font-weight: 400;
+  color: var(--color-text);
+}
+
+@media (max-width: 640px) {
+  .filters__row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .filters__row .filters__field:first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+.segmented {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 4px;
+  border-radius: 12px;
+  background: var(--color-surface-2);
+}
+
+.segmented__item {
+  padding: 0.4rem 1rem;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--color-muted);
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.segmented__item[aria-pressed='true'] {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
+}
+
+/* --- Chi tiết giao dịch --- */
+.detail-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0 1rem;
+  text-align: center;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.detail-hero__icon {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  margin-bottom: 0.25rem;
+  border-radius: 18px;
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.detail-hero__title {
+  font-weight: 600;
+}
+
+.detail-hero__amount {
+  font-size: 1.9rem;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Chuyển tiền --- */
+.steps {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.steps__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.steps__item:not(:last-child)::after {
+  content: '';
+  flex: 1;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--color-border);
+}
+
+.steps__item--done:not(:last-child)::after {
+  background: var(--color-primary);
+}
+
+.steps__dot {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--color-surface-2);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.steps__item--active {
+  color: var(--color-text);
+}
+
+.steps__item--active .steps__dot,
+.steps__item--done .steps__dot {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+@media (max-width: 520px) {
+  .steps__item:not(.steps__item--active) .steps__label {
+    display: none;
+  }
+}
+
+.contact-chips {
+  display: flex;
+  gap: 0.6rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+}
+
+.contact-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 72px;
+  padding: 0.6rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.contact-chip:hover {
+  border-color: var(--color-primary);
+}
+
+.contact-chip--active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.recipient {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.recipient__name {
+  font-weight: 650;
+}
+
+.recipient__phone {
+  color: var(--color-muted);
+  font-size: 0.9rem;
+}
+
+.confirm-amount {
+  padding: 0.75rem 0;
+  font-size: 2rem;
+  font-weight: 750;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.otp-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.85rem 1rem;
+  border: 1px dashed var(--color-primary);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-soft);
+  font-size: 0.9rem;
+}
+
+.otp-demo__badge {
+  align-self: flex-start;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.otp-demo__code {
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  letter-spacing: 0.15em;
+}
+
+.otp-input {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  letter-spacing: 0.6em;
+  text-align: center;
+  padding-left: 1.2rem;
+}
+
+.otp-timer {
+  margin-top: -0.5rem;
+  font-size: 0.88rem;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.success {
+  align-items: center;
+  text-align: center;
+}
+
+.success .detail-list {
+  width: 100%;
+  text-align: left;
+}
+
+.success .button-row {
+  width: 100%;
+}
+
+.success__icon {
+  display: grid;
+  place-items: center;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: var(--color-income-soft);
+  color: var(--color-income);
+  animation: pop-in 0.3s ease-out;
+}
+
+.success__title {
+  font-size: 1.25rem;
+}
+
+.success__amount {
+  font-size: 2rem;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Cài đặt --- */
+.profile-card {
+  flex-direction: row;
+  align-items: center;
+}
+
+.profile-card__name {
+  font-weight: 650;
+  font-size: 1.05rem;
+}
+
+.settings-group {
+  gap: 1.1rem;
+}
