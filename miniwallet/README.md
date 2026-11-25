@@ -45,13 +45,14 @@ Dữ liệu là giả lập và chạy hoàn toàn trên trình duyệt, nên kh
 
 | | |
 |---|---|
+| Ngôn ngữ | TypeScript (`strict`, `noUncheckedIndexedAccess`) |
 | Giao diện | React 18 (function component + hooks), Vite |
 | Điều hướng | React Router 6 (route lồng nhau, tham số `:id`, `useSearchParams`) |
 | Quản lý state | Context API + `useReducer` (state ví dùng chung; luồng chuyển tiền là một máy trạng thái riêng) |
 | Gọi dữ liệu | API giả lập trả về Promise có độ trễ 0,3–0,7 giây và lỗi có mã (`ApiError`), cùng hook `useAsync` tự viết |
 | Lưu trữ | `localStorage` (có xử lý khi trình duyệt chặn) |
 | Giao diện | CSS thuần + CSS variables cho chế độ sáng/tối, không dùng thư viện UI |
-| Kiểm thử | Vitest: 37 test cho hàm định dạng, validate, lọc/phân trang, reducer và toàn bộ luồng chuyển tiền của API |
+| Kiểm thử | Vitest: 41 test cho hàm định dạng, validate, lọc/phân trang, reducer và toàn bộ luồng chuyển tiền của API |
 
 Chỉ dùng 3 thư viện khi chạy: `react`, `react-dom`, `react-router-dom`.
 
@@ -63,7 +64,8 @@ Yêu cầu Node.js 18 trở lên.
 npm install
 npm run dev      # mở http://localhost:5173
 npm test         # chạy test
-npm run build    # build production vào thư mục dist/
+npm run typecheck # kiểm tra kiểu TypeScript
+npm run build    # kiểm tra kiểu rồi build production vào thư mục dist/
 npm run preview  # xem thử bản build
 ```
 
@@ -106,7 +108,7 @@ sequenceDiagram
     end
 ```
 
-Các bước của form được quản lý bằng reducer (`components/transfer/transferReducer.js`):
+Các bước của form được quản lý bằng reducer (`components/transfer/transferReducer.ts`):
 
 ```
 form ──Tiếp tục──▶ confirm ──Xác nhận──▶ otp ──OTP đúng──▶ success
@@ -119,31 +121,33 @@ form ──Tiếp tục──▶ confirm ──Xác nhận──▶ otp ──OT
 ```
 src/
 ├── api/
-│   ├── db.js                 # "Cơ sở dữ liệu": bộ nhớ + localStorage
-│   └── walletApi.js          # API giả lập: độ trễ, kiểm tra dữ liệu, OTP, ApiError
+│   ├── db.ts                 # "Cơ sở dữ liệu": bộ nhớ + localStorage
+│   └── walletApi.ts          # API giả lập: độ trễ, kiểm tra dữ liệu, OTP, ApiError
 ├── components/
 │   ├── common/               # Button, Field, Modal, Switch, Money, Pagination, States...
-│   ├── charts/DonutChart.jsx # Biểu đồ tròn SVG
-│   ├── layout/Layout.jsx     # Thanh bên / thanh dưới + <Outlet />
+│   ├── charts/DonutChart.tsx # Biểu đồ tròn SVG
+│   ├── layout/Layout.tsx     # Thanh bên / thanh dưới + <Outlet />
 │   ├── transaction/          # TransactionItem
 │   └── transfer/             # Các bước chuyển tiền + transferReducer
 ├── context/
-│   ├── WalletContext.jsx     # Provider + hook useWallet()
-│   └── walletReducer.js
+│   ├── WalletContext.tsx     # Provider + hook useWallet()
+│   └── walletReducer.ts
 ├── data/                     # Danh mục, dữ liệu mẫu (sinh ngẫu nhiên có seed cố định)
 ├── hooks/                    # useAsync, useNow, useTheme
 ├── pages/                    # Dashboard, Transactions, TransactionDetail, TransferPage, Settings, NotFound
 ├── styles/                   # base.css (biến màu, bố cục), components.css, pages.css
-└── utils/                    # format tiền/ngày, validators, lọc/phân trang/thống kê
+├── utils/                    # format tiền/ngày, validators, lọc/phân trang/thống kê
+└── types.ts                  # Kiểu dữ liệu dùng chung: Transaction, Database, OtpTicket...
 ```
 
-Test nằm cạnh file được test (`*.test.js`).
+Test nằm cạnh file được test (`*.test.ts`).
 
 ## Một số quyết định khi làm
 
 - **Tách logic khỏi giao diện.** Định dạng, validate, lọc và thống kê là hàm thuần trong `utils/`, nên test dễ mà không cần render component. Hàm `validateTransfer` dùng chung cho form và "server".
-- **API giả lập nhưng hành xử như thật.** Có độ trễ, lỗi có mã, và kiểm tra lại dữ liệu ở server. Nhờ vậy giao diện phải xử lý đủ loading và lỗi. Muốn nối backend thật thì chỉ cần thay `api/walletApi.js`, các trang giữ nguyên.
+- **API giả lập nhưng hành xử như thật.** Có độ trễ, lỗi có mã, và kiểm tra lại dữ liệu ở server. Nhờ vậy giao diện phải xử lý đủ loading và lỗi. Muốn nối backend thật thì chỉ cần thay `api/walletApi.ts`, các trang giữ nguyên.
 - **Tránh hiện sai dữ liệu khi đổi bộ lọc nhanh.** `useAsync` bỏ qua kết quả của lần gọi cũ nếu đã có lần gọi mới hơn.
+- **Để TypeScript chặn trạng thái sai.** Action của reducer là union có phân biệt (discriminated union), mã lỗi API là kiểu liệt kê `ApiErrorCode`, và dữ liệu đọc từ URL hay localStorage được kiểm tra trước khi dùng (`isCategoryKey`, `isDatabase`).
 - **Tiền luôn là số nguyên (đồng).** Chỉ định dạng khi hiển thị, tránh lỗi làm tròn số thực.
 
 ## Deploy lên Vercel
@@ -154,7 +158,6 @@ Test nằm cạnh file được test (`*.test.js`).
 
 ## Hướng phát triển
 
-- Chuyển sang TypeScript.
 - Thêm test giao diện với React Testing Library.
 - Nối với backend thật (Spring Boot + JWT).
 - Thêm tính năng nạp tiền và xuất lịch sử ra CSV.
