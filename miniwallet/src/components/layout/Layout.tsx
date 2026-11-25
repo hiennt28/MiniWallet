@@ -1,8 +1,9 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { useWallet } from '../../context/WalletContext';
 import { formatPhone } from '../../utils/format';
 import { cx } from '../../utils/cx';
-import { HomeIcon, ListIcon, SendIcon, SettingsIcon } from '../icons';
+import { HomeIcon, ListIcon, LockIcon, LogOutIcon, SendIcon, SettingsIcon } from '../icons';
 import Avatar from '../common/Avatar';
 import { ErrorState, Skeleton } from '../common/States';
 
@@ -23,7 +24,8 @@ function Brand() {
 }
 
 export default function Layout() {
-  const { profile, status, error, refresh } = useWallet();
+  const { profile, status, error, refresh, frozen } = useWallet();
+  const { logout } = useAuth();
   const failedToLoad = status === 'error' && !profile;
 
   return (
@@ -34,7 +36,12 @@ export default function Layout() {
 
       <header className="topbar">
         <Brand />
-        {profile && <Avatar name={profile.name} size="sm" />}
+        <div className="topbar__actions">
+          {profile && <Avatar name={profile.name} size="sm" />}
+          <button type="button" className="icon-btn" onClick={logout} aria-label="Đăng xuất">
+            <LogOutIcon />
+          </button>
+        </div>
       </header>
 
       <aside className="sidebar">
@@ -59,6 +66,9 @@ export default function Layout() {
                 <strong>{profile.name}</strong>
                 <span>{formatPhone(profile.phone)}</span>
               </span>
+              <button type="button" className="icon-btn" onClick={logout} aria-label="Đăng xuất" title="Đăng xuất">
+                <LogOutIcon />
+              </button>
             </>
           ) : (
             <Skeleton height="40px" />
@@ -67,6 +77,17 @@ export default function Layout() {
       </aside>
 
       <main className="main" id="main" tabIndex={-1}>
+        {frozen && (
+          <div className="frozen-banner" role="status">
+            <LockIcon />
+            <span>
+              Ví đang bị khóa khẩn cấp, mọi giao dịch chuyển tiền đều bị chặn.{' '}
+              <Link to="/settings" className="link">
+                Mở khóa
+              </Link>
+            </span>
+          </div>
+        )}
         {failedToLoad ? <ErrorState message={error?.message} onRetry={refresh} /> : <Outlet />}
       </main>
     </div>

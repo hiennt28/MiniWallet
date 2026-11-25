@@ -1,18 +1,20 @@
 import { useReducer, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { confirmTransfer, createTransfer, resendOtp, toApiError, type ApiErrorCode } from '../api/walletApi';
 import StepIndicator from '../components/transfer/StepIndicator';
 import TransferForm from '../components/transfer/TransferForm';
 import TransferConfirm from '../components/transfer/TransferConfirm';
+import PinStep from '../components/transfer/PinStep';
 import OtpStep from '../components/transfer/OtpStep';
 import TransferSuccess from '../components/transfer/TransferSuccess';
 import { initialTransferState, transferReducer } from '../components/transfer/transferReducer';
 import { Spinner } from '../components/common/States';
 import { useWallet } from '../context/WalletContext';
-import { digitsOnly, parseAmount } from '../utils/format';
-import { validateTransfer, type TransferField } from '../utils/validators';
+import { digitsOnly, formatPhone, parseAmount } from '../utils/format';
+import { requiresOtp, validateTransfer, type TransferField } from '../utils/validators';
 
 // Các lỗi khiến giao dịch không thể tiếp tục: quay về bước nhập thông tin
-const FATAL_CODES = new Set<ApiErrorCode>(['OTP_LOCKED', 'NOT_FOUND', 'INSUFFICIENT_BALANCE']);
+const FATAL_CODES = new Set<ApiErrorCode>(['OTP_LOCKED', 'NOT_FOUND', 'INSUFFICIENT_BALANCE', 'PIN_LOCKED', 'WALLET_FROZEN', 'VALIDATION']);
 
 export default function TransferPage() {
   const wallet = useWallet();
@@ -26,12 +28,15 @@ export default function TransferPage() {
   const amount = parseAmount(state.values.amount);
   const note = state.values.note.trim();
   const recipient = wallet.contacts.find((c) => c.phone === phone);
+  const needsOtp = requiresOtp(amount);
 
   const handleChange = (field: TransferField, value: string) => dispatch({ type: 'CHANGE', field, value });
 
   function failWith(error: unknown) {
     const err = toApiError(error);
     dispatch({ type: FATAL_CODES.has(err.code) ? 'CANCELLED' : 'SUBMIT_ERROR', message: err.message });
+    // Ví có thể vừa bị khóa ở thiết bị khác: tải lại để hiện trạng thái mới
+    if (err.code === 'WALLET_FROZEN' || err.code === 'INSUFFICIENT_BALANCE') wallet.refresh();
   }
 
   function handleContinue(e: FormEvent<HTMLFormElement>) {
@@ -47,13 +52,18 @@ export default function TransferPage() {
     dispatch({ type: 'GO_CONFIRM' });
   }
 
-  async function handleConfirm() {
+  async function handlePin(pin: string) {
     dispatch({ type: 'SUBMIT_START' });
     try {
-      const otp = await createTransfer({ phone, amount, note });
-      dispatch({ type: 'OTP_SENT', ...otp });
+      const result = await createTransfer({ phone, amount, note, pin });
+      if (result.status === 'completed') {
+        dispatch({ type: 'CONFIRM_SUCCESS', tx: result.tx });
+        wallet.refresh(); // cập nhật số dư hiển thị ở các trang khác
+      } else {
+        dispatch({ type: 'OTP_SENT', ...result.ticket });
+      }
     } catch (err) {
-      dispatch({ type: 'SUBMIT_ERROR', message: toApiError(err).message });
+      failWith(err);
     }
   }
 
@@ -62,7 +72,7 @@ export default function TransferPage() {
     try {
       const tx = await confirmTransfer(transferId, code);
       dispatch({ type: 'CONFIRM_SUCCESS', tx });
-      wallet.refresh(); // cập nhật số dư hiển thị ở các trang khác
+      wallet.refresh();
     } catch (err) {
       failWith(err);
     }
@@ -79,17 +89,43 @@ export default function TransferPage() {
   }
 
   const { transferId, otp, sentAt, expiresAt } = state;
+  const header = (
+    <header className="page-header">
+      <div>
+        <p className="page-eyebrow">Chuyển tiền tới ví MiniWallet khác</p>
+        <h1 className="page-title">Chuyển tiền</h1>
+      </div>
+    </header>
+  );
+
+  // Ví bị khóa: không cho bắt đầu giao dịch (server cũng chặn, đây chỉ là để báo sớm)
+  if (wallet.frozen && state.step !== 'success') {
+    return (
+      <div className="page page--narrow">
+        {header}
+        <section className="card form">
+          {state.error && (
+            <div className="alert alert--error" role="alert">
+              {state.error}
+            </div>
+          )}
+          <h2 className="card__title">Ví đang bị khóa</h2>
+          <p className="text-muted">Bạn đã khóa ví khẩn cấp nên tạm thời không thể chuyển tiền. Mở khóa bằng mã PIN trong phần Cài đặt.</p>
+          <div>
+            <Link to="/settings" className="btn btn--primary">
+              <span>Đi tới Cài đặt</span>
+            </Link>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="page page--narrow">
-      <header className="page-header">
-        <div>
-          <p className="page-eyebrow">Chuyển tiền tới ví MiniWallet khác</p>
-          <h1 className="page-title">Chuyển tiền</h1>
-        </div>
-      </header>
+      {header}
 
-      {state.step !== 'success' && <StepIndicator step={state.step} />}
+      {state.step !== 'success' && <StepIndicator step={state.step} withOtp={needsOtp} />}
 
       {state.step === 'form' && (
         <TransferForm
@@ -112,10 +148,22 @@ export default function TransferPage() {
           note={note}
           recipient={recipient}
           balance={wallet.balance}
-          submitting={state.submitting}
+          needsOtp={needsOtp}
           error={state.error}
           onBack={() => dispatch({ type: 'BACK_TO_FORM' })}
-          onConfirm={handleConfirm}
+          onConfirm={() => dispatch({ type: 'GO_PIN' })}
+        />
+      )}
+
+      {state.step === 'pin' && (
+        <PinStep
+          amount={amount}
+          recipientName={recipient?.name ?? formatPhone(phone)}
+          needsOtp={needsOtp}
+          submitting={state.submitting}
+          error={state.error}
+          onSubmit={handlePin}
+          onBack={() => dispatch({ type: 'BACK_TO_CONFIRM' })}
         />
       )}
 

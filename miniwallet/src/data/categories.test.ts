@@ -15,7 +15,7 @@ describe('danh mục', () => {
   });
 
   it('lọc danh mục theo loại giao dịch', () => {
-    expect(categoriesForType('income').map((c) => c.key)).toEqual(['transfer_in', 'salary']);
-    expect(categoriesForType('all')).toHaveLength(8);
+    expect(categoriesForType('income').map((c) => c.key)).toEqual(['transfer_in', 'salary', 'bonus']);
+    expect(categoriesForType('all')).toHaveLength(9);
   });
 });

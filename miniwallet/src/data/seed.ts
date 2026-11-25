@@ -2,9 +2,23 @@
  * Dữ liệu mẫu: hồ sơ, danh bạ và khoảng 60 ngày giao dịch tính ngược từ hôm nay.
  * Dùng bộ sinh số ngẫu nhiên có seed cố định nên lần nào tạo lại cũng ra cùng một bộ dữ liệu.
  */
-import type { CategoryKey, Contact, Database, Profile, Transaction } from '../types';
+import { INITIAL_SECURITY } from '../utils/security';
+import type { Account, CategoryKey, Contact, Database, PinCredentials, Profile, Transaction } from '../types';
 
 export const PROFILE: Profile = { name: 'Nguyễn Văn An', phone: '0912345678' };
+
+/** Mã PIN của tài khoản demo, hiển thị ở trang đăng nhập. */
+export const DEMO_PIN = '147258';
+
+/**
+ * Mã băm tính sẵn của DEMO_PIN (PBKDF2-SHA256, 100.000 vòng) để tạo dữ liệu mẫu không cần chờ băm.
+ * Có test kiểm tra mã này khớp với DEMO_PIN.
+ */
+export const DEMO_PIN_CREDENTIALS: PinCredentials = {
+  salt: '6d696e6977616c6c65742d64656d6f21',
+  hash: '72d4a01f913594e662b7f3c7ebc4d1b68647fb56b4a2ef78b6b9cb732866233c',
+  iterations: 100_000,
+};
 
 export const CONTACTS: Contact[] = [
   { name: 'Trần Thị Bình', phone: '0987654321' },
@@ -49,7 +63,8 @@ function createRandom(seed: number): () => number {
 
 type SeedTx = Omit<Transaction, 'id' | 'status' | 'createdAt'>;
 
-export function createSeedData(now: Date = new Date(), seed = 2026): Database {
+/** Khoảng 60 ngày giao dịch của tài khoản demo, mới nhất trước. */
+export function createDemoTransactions(now: Date = new Date(), seed = 2026): Transaction[] {
   const random = createRandom(seed);
   // Mảng truyền vào luôn khác rỗng nên phần tử được chọn chắc chắn tồn tại
   const pick = <T,>(arr: readonly T[]): T => arr[Math.floor(random() * arr.length)] as T;
@@ -122,11 +137,25 @@ export function createSeedData(now: Date = new Date(), seed = 2026): Database {
   }
 
   transactions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  return transactions;
+}
 
+export function createDemoAccount(now: Date = new Date()): Account {
   return {
-    balance: INITIAL_BALANCE,
     profile: { ...PROFILE },
+    pin: { ...DEMO_PIN_CREDENTIALS },
+    security: { ...INITIAL_SECURITY },
+    balance: INITIAL_BALANCE,
     contacts: CONTACTS.map((c) => ({ ...c })),
-    transactions,
+    transactions: createDemoTransactions(now),
+    createdAt: new Date(now.getFullYear(), now.getMonth() - 2, 1).toISOString(),
+  };
+}
+
+export function createSeedData(now: Date = new Date()): Database {
+  return {
+    version: 2,
+    accounts: { [PROFILE.phone]: createDemoAccount(now) },
+    sessions: {},
   };
 }

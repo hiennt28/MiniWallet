@@ -322,3 +322,9 @@ svg {
   font-family: var(--font-mono);
   font-size: 0.85em;
 }
+
+.topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
