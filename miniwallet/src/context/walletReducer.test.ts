@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createInitialWalletState, walletReducer } from './walletReducer';
 
-const payload = { balance: 100, profile: { name: 'A', phone: '0912345678' }, contacts: [] };
+const payload = { balance: 100, profile: { name: 'A', phone: '0912345678' }, contacts: [], frozen: false };
 
 describe('walletReducer', () => {
   it('lần tải đầu là "loading", tải lại khi đã có dữ liệu là "refreshing"', () => {

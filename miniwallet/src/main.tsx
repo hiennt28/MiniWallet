@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
-import { WalletProvider } from './context/WalletContext';
+import { AuthProvider } from './context/AuthContext';
 import { applyTheme, getInitialTheme } from './utils/theme';
 import './styles/base.css';
 import './styles/components.css';
@@ -17,9 +17,9 @@ if (!root) throw new Error('Không tìm thấy phần tử #root trong index.htm
 ReactDOM.createRoot(root).render(
   <React.StrictMode>
     <BrowserRouter>
-      <WalletProvider>
+      <AuthProvider>
         <App />
-      </WalletProvider>
+      </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>,
 );

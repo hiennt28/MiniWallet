@@ -5,7 +5,15 @@ export const TRANSFER_LIMITS = {
   min: 10_000,
   max: 50_000_000,
   noteMax: 100,
+  /** Từ mức này trở lên phải nhập thêm OTP sau PIN. */
+  otpFrom: 5_000_000,
 } as const;
+
+export const NAME_LIMITS = { min: 2, max: 50 } as const;
+
+export function requiresOtp(amount: number): boolean {
+  return amount >= TRANSFER_LIMITS.otpFrom;
+}
 
 export type TransferField = 'phone' | 'amount' | 'note';
 export type TransferErrors = Partial<Record<TransferField, string>>;
@@ -17,6 +25,47 @@ export function isValidPhone(phone: string): boolean {
 
 export function isValidOtp(otp: string | null | undefined): boolean {
   return /^\d{6}$/.test(String(otp ?? ''));
+}
+
+/** PIN cùng định dạng với OTP: đúng 6 chữ số. */
+export const isValidPin = isValidOtp;
+
+/** PIN dễ đoán: 6 số giống nhau (111111) hoặc dãy liên tiếp tăng/giảm (123456, 987654). */
+export function isWeakPin(pin: string): boolean {
+  if (/^(\d)\1{5}$/.test(pin)) return true;
+  const steps = new Set<number>();
+  for (let i = 1; i < pin.length; i += 1) steps.add(Number(pin[i]) - Number(pin[i - 1]));
+  return steps.size === 1 && (steps.has(1) || steps.has(-1));
+}
+
+export type RegisterField = 'name' | 'phone' | 'pin' | 'confirmPin';
+export type RegisterErrors = Partial<Record<RegisterField, string>>;
+
+export function validatePinChoice(pin: string): string | undefined {
+  if (!pin) return 'Vui lòng tạo mã PIN.';
+  if (!isValidPin(pin)) return 'Mã PIN gồm đúng 6 chữ số.';
+  if (isWeakPin(pin)) return 'Mã PIN quá dễ đoán. Không dùng 6 số giống nhau hoặc dãy số liên tiếp.';
+  return undefined;
+}
+
+/** Kiểm tra form đăng ký. confirmPin chỉ có ở client nên không bắt buộc. */
+export function validateRegistration({ name, phone, pin, confirmPin }: { name: string; phone: string; pin: string; confirmPin?: string }): RegisterErrors {
+  const errors: RegisterErrors = {};
+  const trimmed = name.trim();
+  if (!trimmed) errors.name = 'Vui lòng nhập họ tên.';
+  else if (trimmed.length < NAME_LIMITS.min || trimmed.length > NAME_LIMITS.max) {
+    errors.name = `Họ tên từ ${NAME_LIMITS.min} đến ${NAME_LIMITS.max} ký tự.`;
+  }
+
+  const p = digitsOnly(phone);
+  if (!p) errors.phone = 'Vui lòng nhập số điện thoại.';
+  else if (!isValidPhone(p)) errors.phone = 'Số điện thoại không hợp lệ (10 số, bắt đầu bằng 03, 05, 07, 08 hoặc 09).';
+
+  const pinError = validatePinChoice(pin);
+  if (pinError) errors.pin = pinError;
+  else if (confirmPin !== undefined && confirmPin !== pin) errors.confirmPin = 'Mã PIN nhập lại không khớp.';
+
+  return errors;
 }
 
 /**

@@ -1,18 +1,27 @@
 /*
  * Luồng chuyển tiền là một "máy trạng thái" nhỏ:
- *   form → confirm → otp → success
- * Có thể quay lại form từ confirm/otp; sai OTP quá số lần cho phép thì bị hủy và về form.
+ *   form → confirm → pin → (otp, chỉ khi số tiền lớn) → success
+ * Có thể quay lại từ các bước sau; lỗi nghiêm trọng (sai OTP quá số lần, PIN bị khóa, ví bị khóa)
+ * thì hủy và về form.
  */
 import type { OtpTicket, Transaction } from '../../types';
 import type { TransferErrors, TransferField } from '../../utils/validators';
 
-export type TransferStep = 'form' | 'confirm' | 'otp' | 'success';
+export type TransferStep = 'form' | 'confirm' | 'pin' | 'otp' | 'success';
 
-export const TRANSFER_STEPS: ReadonlyArray<{ key: Exclude<TransferStep, 'success'>; label: string }> = [
+type VisibleStep = Exclude<TransferStep, 'success'>;
+
+const ALL_STEPS: ReadonlyArray<{ key: VisibleStep; label: string }> = [
   { key: 'form', label: 'Nhập thông tin' },
   { key: 'confirm', label: 'Xác nhận' },
-  { key: 'otp', label: 'Xác thực OTP' },
+  { key: 'pin', label: 'Mã PIN' },
+  { key: 'otp', label: 'Mã OTP' },
 ];
+
+/** Các bước hiển thị trên thanh tiến trình: chỉ có bước OTP khi số tiền cần OTP. */
+export function getTransferSteps(withOtp: boolean) {
+  return withOtp ? ALL_STEPS : ALL_STEPS.filter((s) => s.key !== 'otp');
+}
 
 /** Giá trị thô trong form (chuỗi người dùng gõ, chưa chuyển sang số). */
 export type TransferValues = Record<TransferField, string>;
@@ -32,6 +41,8 @@ export type TransferAction =
   | { type: 'CHANGE'; field: TransferField; value: string }
   | { type: 'VALIDATION_FAILED'; errors: TransferErrors }
   | { type: 'GO_CONFIRM' }
+  | { type: 'GO_PIN' }
+  | { type: 'BACK_TO_CONFIRM' }
   | { type: 'BACK_TO_FORM' }
   | { type: 'SUBMIT_START' }
   | { type: 'SUBMIT_ERROR'; message: string }
@@ -63,6 +74,10 @@ export function transferReducer(state: TransferState, action: TransferAction): T
       return { ...state, errors: action.errors };
     case 'GO_CONFIRM':
       return { ...state, step: 'confirm', errors: {}, error: '' };
+    case 'GO_PIN':
+      return { ...state, step: 'pin', error: '' };
+    case 'BACK_TO_CONFIRM':
+      return { ...state, step: 'confirm', submitting: false, error: '' };
     case 'BACK_TO_FORM':
       return { ...state, step: 'form', submitting: false, error: '', ...EMPTY_OTP };
     case 'SUBMIT_START':

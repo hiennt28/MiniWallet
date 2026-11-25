@@ -117,3 +117,17 @@ export const InboxIcon: IconComponent = (p) => (
     <path d="M5.5 5h13L22 12v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6l3.5-7Z" />
   </Icon>
 );
+
+export const LogOutIcon: IconComponent = (p) => (
+  <Icon {...p}>
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <path d="m16 17 5-5-5-5M21 12H9" />
+  </Icon>
+);
+
+export const LockIcon: IconComponent = (p) => (
+  <Icon {...p}>
+    <rect x="4" y="11" width="16" height="10" rx="2" />
+    <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+  </Icon>
+);

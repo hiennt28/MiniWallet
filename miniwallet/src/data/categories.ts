@@ -10,6 +10,7 @@ export const CATEGORIES: Record<CategoryKey, Category> = {
   transfer_out: { label: 'Chuyển tiền', icon: '↗', color: '#ef4444', type: 'expense' },
   transfer_in: { label: 'Nhận tiền', icon: '↙', color: '#22c55e', type: 'income' },
   salary: { label: 'Lương', icon: '💼', color: '#10b981', type: 'income' },
+  bonus: { label: 'Khuyến mãi', icon: '🎁', color: '#06b6d4', type: 'income' },
 };
 
 const UNKNOWN: Category = { label: 'Khác', icon: '•', color: '#94a3b8', type: 'expense' };

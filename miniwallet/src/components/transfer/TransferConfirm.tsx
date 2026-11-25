@@ -1,4 +1,5 @@
 import { formatPhone, formatVND } from '../../utils/format';
+import { TRANSFER_LIMITS } from '../../utils/validators';
 import Avatar from '../common/Avatar';
 import Button from '../common/Button';
 import type { Contact } from '../../types';
@@ -9,13 +10,13 @@ interface TransferConfirmProps {
   note: string;
   recipient: Contact | undefined;
   balance: number;
-  submitting: boolean;
+  needsOtp: boolean;
   error: string;
   onBack: () => void;
   onConfirm: () => void;
 }
 
-export default function TransferConfirm({ phone, amount, note, recipient, balance, submitting, error, onBack, onConfirm }: TransferConfirmProps) {
+export default function TransferConfirm({ phone, amount, note, recipient, balance, needsOtp, error, onBack, onConfirm }: TransferConfirmProps) {
   const name = recipient?.name ?? 'Người nhận mới';
 
   return (
@@ -49,6 +50,10 @@ export default function TransferConfirm({ phone, amount, note, recipient, balanc
         </div>
       </dl>
 
+      {needsOtp && (
+        <div className="alert alert--warning">Giao dịch từ {formatVND(TRANSFER_LIMITS.otpFrom)} trở lên cần xác thực thêm bằng mã OTP sau khi nhập PIN.</div>
+      )}
+
       {!recipient && (
         <div className="alert alert--warning">Số điện thoại này chưa có trong danh bạ. Hãy chắc chắn bạn đã nhập đúng.</div>
       )}
@@ -60,12 +65,10 @@ export default function TransferConfirm({ phone, amount, note, recipient, balanc
       )}
 
       <div className="button-row">
-        <Button variant="secondary" onClick={onBack} disabled={submitting}>
+        <Button variant="secondary" onClick={onBack}>
           Quay lại
         </Button>
-        <Button onClick={onConfirm} loading={submitting}>
-          Xác nhận chuyển
-        </Button>
+        <Button onClick={onConfirm}>Tiếp tục</Button>
       </div>
     </section>
   );

@@ -1,13 +1,14 @@
 import { cx } from '../../utils/cx';
 import { CheckIcon } from '../icons';
-import { TRANSFER_STEPS, type TransferStep } from './transferReducer';
+import { getTransferSteps, type TransferStep } from './transferReducer';
 
-export default function StepIndicator({ step }: { step: TransferStep }) {
-  const currentIndex = step === 'success' ? TRANSFER_STEPS.length : TRANSFER_STEPS.findIndex((s) => s.key === step);
+export default function StepIndicator({ step, withOtp }: { step: TransferStep; withOtp: boolean }) {
+  const steps = getTransferSteps(withOtp);
+  const currentIndex = step === 'success' ? steps.length : steps.findIndex((s) => s.key === step);
 
   return (
     <ol className="steps" aria-label="Các bước chuyển tiền">
-      {TRANSFER_STEPS.map((s, i) => {
+      {steps.map((s, i) => {
         const done = i < currentIndex;
         const active = i === currentIndex;
         return (

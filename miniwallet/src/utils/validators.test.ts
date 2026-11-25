@@ -1,5 +1,36 @@
 import { describe, expect, it } from 'vitest';
-import { isValidOtp, isValidPhone, validateTransfer } from './validators';
+import { isValidOtp, isValidPhone, isWeakPin, requiresOtp, validateRegistration, validateTransfer } from './validators';
+
+describe('mã PIN', () => {
+  it('nhận ra PIN dễ đoán', () => {
+    expect(isWeakPin('111111')).toBe(true);
+    expect(isWeakPin('123456')).toBe(true);
+    expect(isWeakPin('987654')).toBe(true);
+    expect(isWeakPin('147258')).toBe(false);
+    expect(isWeakPin('135790')).toBe(false);
+  });
+
+  it('giao dịch từ 5 triệu cần OTP', () => {
+    expect(requiresOtp(4_999_999)).toBe(false);
+    expect(requiresOtp(5_000_000)).toBe(true);
+  });
+});
+
+describe('validateRegistration', () => {
+  const valid = { name: 'Nguyễn An', phone: '0987654321', pin: '147258', confirmPin: '147258' };
+
+  it('không có lỗi khi hợp lệ', () => {
+    expect(validateRegistration(valid)).toEqual({});
+  });
+
+  it('báo lỗi từng trường', () => {
+    expect(validateRegistration({ ...valid, name: ' A ' }).name).toBeTruthy();
+    expect(validateRegistration({ ...valid, phone: '0123' }).phone).toBeTruthy();
+    expect(validateRegistration({ ...valid, pin: '12345' }).pin).toMatch(/6 chữ số/);
+    expect(validateRegistration({ ...valid, pin: '000000', confirmPin: '000000' }).pin).toMatch(/dễ đoán/);
+    expect(validateRegistration({ ...valid, confirmPin: '147259' }).confirmPin).toMatch(/không khớp/);
+  });
+});
 
 const ctx = { balance: 1_000_000, ownPhone: '0912345678' };
 
