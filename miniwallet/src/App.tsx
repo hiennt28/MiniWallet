@@ -1,9 +1,11 @@
 import { Route, Routes } from 'react-router-dom';
 import { GuestOnly, RequireAuth } from './components/auth/RouteGuards';
 import Layout from './components/layout/Layout';
+import BanksPage from './pages/BanksPage';
 import { WalletProvider } from './context/WalletContext';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
+import MoneyMovePage from './pages/MoneyMovePage';
 import NotFound from './pages/NotFound';
 import Register from './pages/Register';
 import Settings from './pages/Settings';
@@ -30,6 +32,10 @@ export default function App() {
         >
           <Route index element={<Dashboard />} />
           <Route path="transfer" element={<TransferPage />} />
+          {/* key khác nhau để đổi giữa nạp và rút thì form được tạo mới */}
+          <Route path="topup" element={<MoneyMovePage key="topup" mode="topup" />} />
+          <Route path="withdraw" element={<MoneyMovePage key="withdraw" mode="withdraw" />} />
+          <Route path="banks" element={<BanksPage />} />
           <Route path="transactions" element={<Transactions />} />
           <Route path="transactions/:id" element={<TransactionDetail />} />
           <Route path="settings" element={<Settings />} />

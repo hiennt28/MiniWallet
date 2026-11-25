@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { freezeWallet, unfreezeWallet } from '../api/authApi';
 import { resetData, toApiError } from '../api/walletApi';
 import PinInput from '../components/auth/PinInput';
@@ -50,7 +51,7 @@ export default function Settings() {
     try {
       await freezeWallet();
       await refresh();
-      setMessage({ type: 'success', text: 'Đã khóa ví. Mọi giao dịch chuyển tiền sẽ bị chặn cho tới khi bạn mở khóa.' });
+      setMessage({ type: 'success', text: 'Đã khóa ví. Mọi giao dịch chuyển, nạp và rút tiền sẽ bị chặn cho tới khi bạn mở khóa.' });
     } catch (err) {
       setMessage({ type: 'error', text: toApiError(err).message });
     } finally {
@@ -107,13 +108,23 @@ export default function Settings() {
         </section>
       )}
 
+      <section className="card settings-group">
+        <h2 className="card__title">Ngân hàng liên kết</h2>
+        <p className="text-muted">Liên kết tối đa 3 tài khoản ngân hàng để nạp tiền vào ví và rút tiền về.</p>
+        <div>
+          <Link to="/banks" className="btn btn--secondary">
+            <span>Quản lý tài khoản ngân hàng</span>
+          </Link>
+        </div>
+      </section>
+
       <section className="card settings-group" aria-labelledby="security-title">
         <h2 className="card__title" id="security-title">
           Bảo mật
         </h2>
         {frozen ? (
           <>
-            <div className="alert alert--warning">Ví đang bị khóa. Mọi giao dịch chuyển tiền đều bị chặn.</div>
+            <div className="alert alert--warning">Ví đang bị khóa. Mọi giao dịch chuyển, nạp và rút tiền đều bị chặn.</div>
             <p className="text-muted">Nhập mã PIN để mở khóa và giao dịch lại bình thường.</p>
             <div>
               <Button onClick={() => openDialog('unfreeze')}>Mở khóa ví</Button>
@@ -122,7 +133,7 @@ export default function Settings() {
         ) : (
           <>
             <p className="text-muted">
-              Mất điện thoại hoặc nghi ngờ bị lộ mã PIN? Khóa ví ngay để chặn mọi giao dịch chuyển tiền. Bạn vẫn xem được số dư và lịch sử.
+              Mất điện thoại hoặc nghi ngờ bị lộ mã PIN? Khóa ví ngay để chặn mọi giao dịch chuyển, nạp và rút tiền. Bạn vẫn xem được số dư và lịch sử.
             </p>
             <div>
               <Button variant="danger" onClick={() => openDialog('freeze')}>
@@ -194,7 +205,7 @@ export default function Settings() {
           </>
         }
       >
-        <p>Mọi giao dịch chuyển tiền sẽ bị chặn ngay lập tức. Để mở khóa, bạn cần nhập mã PIN.</p>
+        <p>Mọi giao dịch chuyển, nạp và rút tiền sẽ bị chặn ngay lập tức. Để mở khóa, bạn cần nhập mã PIN.</p>
       </Modal>
 
       <Modal open={dialog === 'unfreeze'} title="Mở khóa ví" onClose={closeDialog}>

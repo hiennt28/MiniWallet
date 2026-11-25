@@ -11,13 +11,17 @@ export type CategoryKey =
   | 'transfer_out'
   | 'transfer_in'
   | 'salary'
-  | 'bonus';
+  | 'bonus'
+  | 'topup'
+  | 'withdraw';
 
 export interface Category {
   label: string;
   icon: string;
   color: string;
   type: TransactionType;
+  /** Tiền chuyển giữa các tài khoản của chính mình (nạp/rút): không tính là chi tiêu theo danh mục. */
+  internal?: boolean;
 }
 
 export interface Transaction {
@@ -29,6 +33,8 @@ export interface Transaction {
   amount: number;
   phone?: string;
   note?: string;
+  /** Ngân hàng liên quan (nạp/rút), dạng hiển thị: "Vietcombank · ****6789". */
+  bankAccount?: string;
   status: 'success';
   /** ISO 8601 */
   createdAt: string;
@@ -60,12 +66,32 @@ export interface SecurityState {
   frozen: boolean;
 }
 
+/** Tài khoản ngân hàng đã liên kết, lưu ở server (có số tài khoản đầy đủ). */
+export interface LinkedBank {
+  id: string;
+  bankCode: string;
+  accountNumber: string;
+  holderName: string;
+  linkedAt: string;
+}
+
+/** Thông tin ngân hàng liên kết trả về cho client: số tài khoản đã được che. */
+export interface LinkedBankView {
+  id: string;
+  bankCode: string;
+  bankName: string;
+  accountMasked: string;
+  holderName: string;
+  linkedAt: string;
+}
+
 export interface Account {
   profile: Profile;
   pin: PinCredentials;
   security: SecurityState;
   balance: number;
   contacts: Contact[];
+  linkedBanks: LinkedBank[];
   transactions: Transaction[];
   createdAt: string;
 }
@@ -143,6 +169,20 @@ export interface TransferInput {
 
 /** Chuyển tiền nhỏ hoàn tất ngay sau PIN; từ ngưỡng OTP trở lên phải nhập thêm OTP. */
 export type CreateTransferResult = { status: 'completed'; tx: Transaction } | { status: 'otp_required'; ticket: OtpTicket };
+
+export type MoneyMoveMode = 'topup' | 'withdraw';
+
+export interface MoneyMoveInput {
+  bankId: string;
+  amount: number;
+  pin: string;
+}
+
+export interface LinkBankInput {
+  bankCode: string;
+  accountNumber: string;
+  pin: string;
+}
 
 export interface RegisterInput {
   name: string;

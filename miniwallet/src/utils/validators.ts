@@ -1,5 +1,5 @@
 import { digitsOnly, formatVND } from './format';
-import type { TransferInput } from '../types';
+import type { MoneyMoveMode, TransferInput } from '../types';
 
 export const TRANSFER_LIMITS = {
   min: 10_000,
@@ -10,6 +10,50 @@ export const TRANSFER_LIMITS = {
 } as const;
 
 export const NAME_LIMITS = { min: 2, max: 50 } as const;
+
+/** Hạn mức mỗi lần nạp / rút. */
+export const MONEY_MOVE_LIMITS = {
+  topup: { min: 10_000, max: 20_000_000 },
+  withdraw: { min: 50_000, max: 20_000_000 },
+} as const satisfies Record<MoneyMoveMode, { min: number; max: number }>;
+
+export const MAX_LINKED_BANKS = 3;
+export const BANK_ACCOUNT_LENGTH = { min: 8, max: 14 } as const;
+
+export type MoneyMoveField = 'bankId' | 'amount';
+export type MoneyMoveErrors = Partial<Record<MoneyMoveField, string>>;
+
+/** Kiểm tra form nạp / rút. Dùng chung cho client và "server". */
+export function validateMoneyMove(mode: MoneyMoveMode, { bankId, amount }: { bankId: string; amount: number }, { balance }: { balance: number }): MoneyMoveErrors {
+  const errors: MoneyMoveErrors = {};
+  const { min, max } = MONEY_MOVE_LIMITS[mode];
+  const verb = mode === 'topup' ? 'nạp' : 'rút';
+
+  if (!bankId) errors.bankId = 'Vui lòng chọn tài khoản ngân hàng.';
+
+  if (!amount) errors.amount = 'Vui lòng nhập số tiền.';
+  else if (!Number.isInteger(amount) || amount < min) errors.amount = `Số tiền ${verb} tối thiểu là ${formatVND(min)}.`;
+  else if (amount > max) errors.amount = `Mỗi lần ${verb} tối đa ${formatVND(max)}.`;
+  else if (mode === 'withdraw' && amount > balance) errors.amount = 'Số dư ví không đủ để rút.';
+
+  return errors;
+}
+
+export type BankLinkField = 'bankCode' | 'accountNumber';
+export type BankLinkErrors = Partial<Record<BankLinkField, string>>;
+
+export function validateBankLink({ bankCode, accountNumber }: { bankCode: string; accountNumber: string }, { knownBank }: { knownBank: (code: string) => boolean }): BankLinkErrors {
+  const errors: BankLinkErrors = {};
+  if (!bankCode) errors.bankCode = 'Vui lòng chọn ngân hàng.';
+  else if (!knownBank(bankCode)) errors.bankCode = 'Ngân hàng không được hỗ trợ.';
+
+  const digits = digitsOnly(accountNumber);
+  if (!digits) errors.accountNumber = 'Vui lòng nhập số tài khoản.';
+  else if (digits !== accountNumber || digits.length < BANK_ACCOUNT_LENGTH.min || digits.length > BANK_ACCOUNT_LENGTH.max) {
+    errors.accountNumber = `Số tài khoản gồm ${BANK_ACCOUNT_LENGTH.min}–${BANK_ACCOUNT_LENGTH.max} chữ số.`;
+  }
+  return errors;
+}
 
 export function requiresOtp(amount: number): boolean {
   return amount >= TRANSFER_LIMITS.otpFrom;

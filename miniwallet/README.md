@@ -1,6 +1,6 @@
 # MiniWallet – Ví điện tử mini
 
-Ứng dụng web mô phỏng ví điện tử: đăng nhập bằng **số điện thoại + mã PIN**, xem số dư, thống kê chi tiêu, tra cứu lịch sử giao dịch và **chuyển tiền có xác thực PIN/OTP**.
+Ứng dụng web mô phỏng ví điện tử: đăng nhập bằng **số điện thoại + mã PIN**, xem số dư, thống kê chi tiêu, tra cứu lịch sử giao dịch, **nạp/rút qua ngân hàng liên kết** và **chuyển tiền có xác thực PIN/OTP**.
 Dữ liệu là giả lập và chạy hoàn toàn trên trình duyệt, nên không cần backend: tải về là chạy được, deploy chỉ cần một bước.
 
 > Demo: _(thêm link Vercel sau khi deploy)_ · Tài khoản dùng thử: **0912 345 678**, PIN **147258** (có nút "Điền sẵn" ở trang đăng nhập)
@@ -14,11 +14,18 @@ Dữ liệu là giả lập và chạy hoàn toàn trên trình duyệt, nên kh
 - Mã PIN được **băm bằng PBKDF2-SHA256** (100.000 vòng, salt riêng cho từng tài khoản) qua Web Crypto. Không lưu PIN dạng chữ thường.
 - **Sai PIN 5 lần thì khóa 5 phút**, áp dụng cho cả đăng nhập lẫn xác nhận giao dịch.
 - Phiên đăng nhập hết hạn sau 30 phút không thao tác, mỗi lần gọi API thì được gia hạn. Hết hạn thì tự về trang đăng nhập, đăng nhập lại thì quay về đúng trang đang xem.
-- **Khóa ví khẩn cấp**: khóa ngay không cần PIN, mở khóa phải nhập PIN. Khi đang khóa, server chặn mọi giao dịch trừ tiền.
+- **Khóa ví khẩn cấp**: khóa ngay không cần PIN, mở khóa phải nhập PIN. Khi đang khóa, server chặn mọi giao dịch chuyển, nạp và rút tiền.
 - Đăng nhập sai số điện thoại hay sai PIN đều nhận cùng một thông báo, để không lộ số nào đã đăng ký.
 
+**Nạp, rút tiền và ngân hàng liên kết**
+- Liên kết tối đa 3 tài khoản ngân hàng giả lập (cần PIN). Tên chủ tài khoản lấy theo tên ví, viết hoa không dấu như ngân hàng thật.
+- API **chỉ trả về số tài khoản đã che** (`****6789`), số đầy đủ không bao giờ ra tới giao diện.
+- Nạp 10.000 ₫ – 20.000.000 ₫/lần, rút 50.000 ₫ – 20.000.000 ₫/lần và không vượt số dư. Cả hai đều xác nhận bằng PIN, có biên lai sau khi xong.
+- Rút tiền về ngân hàng của mình vẫn tính vào "Tiền ra" của tháng, nhưng **không tính là chi tiêu** trong biểu đồ danh mục.
+- Ví bị khóa khẩn cấp thì chặn cả nạp, rút và liên kết ngân hàng mới.
+
 **Tổng quan**
-- Số dư ví, có nút ẩn/hiện. Trạng thái ẩn được nhớ cho lần mở sau.
+- Số dư ví, có nút ẩn/hiện. Trạng thái ẩn được nhớ cho lần mở sau. Nút nhanh: Chuyển tiền, Nạp tiền, Rút tiền.
 - Tổng tiền vào, tiền ra trong tháng.
 - Biểu đồ tròn chi tiêu theo danh mục, **tự vẽ bằng SVG**, không dùng thư viện biểu đồ.
 - 5 giao dịch gần nhất.
@@ -62,7 +69,7 @@ Dữ liệu là giả lập và chạy hoàn toàn trên trình duyệt, nên kh
 | Lưu trữ | `localStorage` (có xử lý khi trình duyệt chặn) |
 | Giao diện | CSS thuần + CSS variables cho chế độ sáng/tối, không dùng thư viện UI |
 | Bảo mật (mô phỏng) | Web Crypto: PBKDF2 để băm PIN, `getRandomValues` cho salt và token |
-| Kiểm thử | Vitest: 68 test cho hàm định dạng, validate, khóa PIN, reducer, đăng nhập/phiên và toàn bộ luồng chuyển tiền của API |
+| Kiểm thử | Vitest: 90 test cho hàm định dạng, validate, khóa PIN, reducer, đăng nhập/phiên, ngân hàng liên kết, nạp/rút và toàn bộ luồng chuyển tiền của API |
 
 Chỉ dùng 3 thư viện khi chạy: `react`, `react-dom`, `react-router-dom`.
 
@@ -88,7 +95,11 @@ npm run preview  # xem thử bản build
 | Chuyển tiền lớn (cần OTP) | Nhập từ 5.000.000 ₫, sau PIN lấy mã OTP trong khung "Tin nhắn giả lập" |
 | Sai PIN 5 lần | Nhập sai PIN 5 lần ở bước PIN hoặc trang đăng nhập: bị khóa 5 phút |
 | Chuyển giữa 2 tài khoản | Đăng ký tài khoản mới → đăng xuất → đăng nhập demo, chuyển tới số mới → đăng nhập lại tài khoản mới để thấy tiền về |
-| Khóa ví khẩn cấp | Cài đặt → Khóa ví khẩn cấp, rồi thử chuyển tiền; mở khóa bằng PIN |
+| Nạp / rút tiền | Tổng quan → Nạp tiền hoặc Rút tiền. Tài khoản demo có sẵn Vietcombank ****6789 |
+| Liên kết ngân hàng | Cài đặt → Quản lý tài khoản ngân hàng → Liên kết mới |
+| Ngân hàng từ chối liên kết | Liên kết số tài khoản có đuôi **0000** |
+| Ngân hàng không đủ tiền | Liên kết số tài khoản có đuôi **1111**, rồi nạp tiền từ tài khoản đó |
+| Khóa ví khẩn cấp | Cài đặt → Khóa ví khẩn cấp, rồi thử chuyển, nạp hoặc rút tiền; mở khóa bằng PIN |
 | Hết phiên đăng nhập | Để yên 30 phút rồi thao tác, hoặc xóa key `miniwallet:token` trong localStorage |
 | Lỗi validate | Bấm "Tiếp tục" khi chưa nhập gì, hoặc nhập số tiền lớn hơn số dư |
 | Sai OTP 3 lần | Với giao dịch lớn, nhập sai mã 3 lần: giao dịch bị hủy và quay về bước đầu |
@@ -147,10 +158,12 @@ src/
 │   ├── server.ts             # Phía server: độ trễ, kiểm tra phiên đăng nhập, kiểm tra PIN
 │   ├── session.ts            # Phía client: giữ token, báo khi phiên hết hạn (như interceptor 401)
 │   ├── authApi.ts            # Đăng ký, đăng nhập, đăng xuất, khóa/mở khóa ví
+│   ├── bankApi.ts            # Ngân hàng liên kết, nạp tiền, rút tiền
 │   ├── walletApi.ts          # Số dư, giao dịch, chuyển tiền (PIN + OTP)
 │   └── errors.ts             # ApiError và các mã lỗi
 ├── components/
-│   ├── auth/                 # AuthLayout, PinInput, RequireAuth / GuestOnly
+│   ├── auth/                 # AuthLayout, PinInput, PinConfirm (bước nhập PIN dùng chung), RequireAuth / GuestOnly
+│   ├── money/                # BankBadge, moneyMoveReducer (luồng nạp/rút)
 │   ├── common/               # Button, Field, Modal, Switch, Money, Pagination, States...
 │   ├── charts/DonutChart.tsx # Biểu đồ tròn SVG
 │   ├── layout/Layout.tsx     # Thanh bên / thanh dưới + <Outlet />
@@ -160,9 +173,9 @@ src/
 │   ├── AuthContext.tsx       # Trạng thái đăng nhập + hook useAuth()
 │   ├── WalletContext.tsx     # Provider + hook useWallet()
 │   └── walletReducer.ts
-├── data/                     # Danh mục, dữ liệu mẫu (sinh ngẫu nhiên có seed cố định)
+├── data/                     # Danh mục, ngân hàng, dữ liệu mẫu (sinh ngẫu nhiên có seed cố định)
 ├── hooks/                    # useAsync, useNow, useTheme
-├── pages/                    # Login, Register, Dashboard, Transactions, TransactionDetail, TransferPage, Settings, NotFound
+├── pages/                    # Login, Register, Dashboard, Transactions, TransactionDetail, TransferPage, MoneyMovePage, BanksPage, Settings, NotFound
 ├── styles/                   # base.css (biến màu, bố cục), components.css, pages.css
 ├── utils/                    # format, validators, lọc/thống kê, crypto (băm PIN), security (khóa PIN)
 └── types.ts                  # Kiểu dữ liệu dùng chung: Transaction, Database, OtpTicket...
@@ -178,6 +191,8 @@ Test nằm cạnh file được test (`*.test.ts`).
 - **Để TypeScript chặn trạng thái sai.** Action của reducer là union có phân biệt (discriminated union), mã lỗi API là kiểu liệt kê `ApiErrorCode`, và dữ liệu đọc từ URL hay localStorage được kiểm tra trước khi dùng (`isCategoryKey`, `isDatabase`).
 - **Bảo mật đặt ở "server", giao diện chỉ báo sớm.** Kiểm tra PIN, khóa PIN và khóa ví nằm trong API. Giao diện có ẩn nút hay không thì gọi thẳng API vẫn bị chặn. Dữ liệu được kiểm tra trước PIN, nên gõ sai số tiền không làm mất lượt thử PIN.
 - **Biết giới hạn của bản mô phỏng.** PIN 6 số chỉ có 1 triệu khả năng nên băm không đủ để chống dò; thứ thực sự bảo vệ là giới hạn số lần sai, và ở hệ thống thật việc này phải làm ở server. Token đang để trong localStorage vì không có server; thực tế nên dùng cookie `httpOnly` để mã XSS không đọc được.
+- **Một bước xác nhận PIN dùng chung.** `PinConfirm` dùng cho chuyển tiền, nạp và rút; nạp và rút dùng chung một trang (`MoneyMovePage`) chỉ khác `mode`, còn hạn mức và câu chữ nằm trong bảng cấu hình.
+- **Dữ liệu cũ vẫn chạy khi thêm trường mới.** `normalizeDatabase()` bổ sung `linkedBanks` cho dữ liệu đã lưu từ bản trước, không cần xóa localStorage.
 - **Mỗi lần đăng nhập là một state ví mới.** `WalletProvider` nằm trong vùng đã đăng nhập, nên đăng xuất rồi đăng nhập tài khoản khác không bị sót dữ liệu của người trước.
 - **Tiền luôn là số nguyên (đồng).** Chỉ định dạng khi hiển thị, tránh lỗi làm tròn số thực.
 
@@ -191,5 +206,5 @@ Test nằm cạnh file được test (`*.test.ts`).
 
 - Thêm test giao diện với React Testing Library.
 - Nối với backend thật (Spring Boot + JWT).
-- Thêm tính năng nạp/rút tiền và xuất lịch sử ra CSV.
+- Xuất lịch sử giao dịch ra CSV.
 - Đổi mã PIN, quên mã PIN (xác thực lại bằng OTP).

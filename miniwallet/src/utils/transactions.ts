@@ -1,4 +1,5 @@
 /* Lọc, phân trang và thống kê giao dịch. Hàm thuần, dùng trong API giả lập và trong test. */
+import { getCategory } from '../data/categories';
 import type { CategoryKey, CategoryTotal, MonthSummary, Page, Transaction, TransactionFilters } from '../types';
 
 /** Bỏ dấu tiếng Việt và chữ hoa để tìm kiếm: "Chuyển Tiền" -> "chuyen tien" */
@@ -70,11 +71,11 @@ export function summarizeMonth(list: Transaction[], ref: Date = new Date()): Mon
   );
 }
 
-/** Chi tiêu trong tháng gom theo danh mục, sắp xếp giảm dần. */
+/** Chi tiêu trong tháng gom theo danh mục, sắp xếp giảm dần. Bỏ qua tiền chuyển nội bộ (rút về ngân hàng của mình). */
 export function expenseByCategory(list: Transaction[], ref: Date = new Date()): CategoryTotal[] {
   const totals = new Map<CategoryKey, number>();
   for (const tx of list) {
-    if (tx.type !== 'expense' || !isSameMonth(tx.createdAt, ref)) continue;
+    if (tx.type !== 'expense' || getCategory(tx.category).internal || !isSameMonth(tx.createdAt, ref)) continue;
     totals.set(tx.category, (totals.get(tx.category) ?? 0) + tx.amount);
   }
   return [...totals.entries()]

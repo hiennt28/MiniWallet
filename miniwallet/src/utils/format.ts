@@ -53,6 +53,23 @@ export function maskPhone(phone: string): string {
   return `${d.slice(0, 4)} *** ${d.slice(7)}`;
 }
 
+/** "1234567890" -> "****7890" */
+export function maskAccountNumber(accountNumber: string): string {
+  return `****${digitsOnly(accountNumber).slice(-4)}`;
+}
+
+/** Tên chủ tài khoản kiểu ngân hàng: "Nguyễn Văn An" -> "NGUYEN VAN AN" */
+export function toBankHolderName(name: string): string {
+  return name
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toUpperCase();
+}
+
 const pad = (n: number) => String(n).padStart(2, '0');
 
 /** ISO -> "24/11/2026" (giờ địa phương) */

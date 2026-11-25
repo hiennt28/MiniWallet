@@ -79,8 +79,11 @@ export default function Dashboard() {
           <Link to="/transfer" className="btn btn--on-dark">
             <span>Chuyển tiền</span>
           </Link>
-          <Link to="/transactions" className="btn btn--ghost-on-dark">
-            <span>Lịch sử</span>
+          <Link to="/topup" className="btn btn--ghost-on-dark">
+            <span>Nạp tiền</span>
+          </Link>
+          <Link to="/withdraw" className="btn btn--ghost-on-dark">
+            <span>Rút tiền</span>
           </Link>
         </div>
       </section>

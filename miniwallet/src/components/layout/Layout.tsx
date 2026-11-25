@@ -81,7 +81,7 @@ export default function Layout() {
           <div className="frozen-banner" role="status">
             <LockIcon />
             <span>
-              Ví đang bị khóa khẩn cấp, mọi giao dịch chuyển tiền đều bị chặn.{' '}
+              Ví đang bị khóa khẩn cấp, mọi giao dịch chuyển, nạp và rút tiền đều bị chặn.{' '}
               <Link to="/settings" className="link">
                 Mở khóa
               </Link>
