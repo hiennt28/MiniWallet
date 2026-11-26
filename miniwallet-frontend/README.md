@@ -216,9 +216,4 @@ Test nằm cạnh file được test (`*.test.ts`).
 2. Vào [vercel.com](https://vercel.com), chọn **Add New → Project** rồi chọn repo. Vercel tự nhận Vite (build: `npm run build`, output: `dist`).
 3. File `vercel.json` đã cấu hình để các đường dẫn như `/transactions/abc` không bị lỗi 404 khi tải lại trang.
 
-## Hướng phát triển
 
-- Thêm test giao diện với React Testing Library.
-- Nối với backend thật (Spring Boot + JWT).
-- Xuất lịch sử giao dịch ra CSV.
-- Đổi mã PIN, quên mã PIN (xác thực lại bằng OTP).
