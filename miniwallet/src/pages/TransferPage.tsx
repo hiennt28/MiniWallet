@@ -1,4 +1,5 @@
 import { useReducer, type FormEvent } from 'react';
+import { getBudgetOverview } from '../api/budgetApi';
 import { confirmTransfer, createTransfer, resendOtp, toApiError, type ApiErrorCode } from '../api/walletApi';
 import StepIndicator from '../components/transfer/StepIndicator';
 import TransferForm from '../components/transfer/TransferForm';
@@ -10,6 +11,8 @@ import TransferSuccess from '../components/transfer/TransferSuccess';
 import { initialTransferState, transferReducer } from '../components/transfer/transferReducer';
 import { Spinner } from '../components/common/States';
 import { useWallet } from '../context/WalletContext';
+import { useAsync } from '../hooks/useAsync';
+import { budgetImpact } from '../utils/budget';
 import { digitsOnly, formatPhone, formatVND, parseAmount } from '../utils/format';
 import { requiresOtp, validateTransfer, type TransferField } from '../utils/validators';
 
@@ -19,6 +22,8 @@ const FATAL_CODES = new Set<ApiErrorCode>(['OTP_LOCKED', 'NOT_FOUND', 'INSUFFICI
 export default function TransferPage() {
   const wallet = useWallet();
   const [state, dispatch] = useReducer(transferReducer, initialTransferState);
+  // Tải lại khi quay về form (sau mỗi giao dịch) để cảnh báo ngân sách dùng số liệu mới
+  const budgets = useAsync(() => getBudgetOverview(), [state.step === 'form']);
 
   const { profile } = wallet;
   if (!profile) return <Spinner />;
@@ -29,6 +34,18 @@ export default function TransferPage() {
   const note = state.values.note.trim();
   const recipient = wallet.contacts.find((c) => c.phone === phone);
   const needsOtp = requiresOtp(amount);
+
+  // Cảnh báo trước nếu khoản chuyển làm ngân sách "Chuyển tiền" tháng này sắp hết hoặc bị vượt
+  const transferBudget = budgets.data?.items.find((i) => i.category === 'transfer_out');
+  let budgetWarning: string | undefined;
+  if (transferBudget && amount > 0) {
+    const impact = budgetImpact(transferBudget, amount);
+    if (impact.status === 'over') {
+      budgetWarning = `Khoản này sẽ làm vượt ngân sách Chuyển tiền tháng này ${formatVND(impact.overBy)} (hạn mức ${formatVND(transferBudget.limit)}).`;
+    } else if (impact.status === 'warning') {
+      budgetWarning = `Sau khoản này bạn sẽ dùng ${Math.round((impact.after / transferBudget.limit) * 100)}% ngân sách Chuyển tiền tháng này.`;
+    }
+  }
 
   const handleChange = (field: TransferField, value: string) => dispatch({ type: 'CHANGE', field, value });
 
@@ -136,6 +153,7 @@ export default function TransferPage() {
           recipient={recipient}
           balance={wallet.balance}
           needsOtp={needsOtp}
+          budgetWarning={budgetWarning}
           error={state.error}
           onBack={() => dispatch({ type: 'BACK_TO_FORM' })}
           onConfirm={() => dispatch({ type: 'GO_PIN' })}

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { getDashboard } from '../api/walletApi';
+import BudgetCard from '../components/budget/BudgetCard';
 import DonutChart from '../components/charts/DonutChart';
 import Money from '../components/common/Money';
 import { EmptyState, ErrorState, Skeleton, TransactionListSkeleton } from '../components/common/States';
@@ -132,6 +133,8 @@ export default function Dashboard() {
                 <EmptyState title="Chưa có giao dịch" />
               )}
             </section>
+
+            <BudgetCard hidden={hideBalance} />
           </div>
         </>
       )}

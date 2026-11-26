@@ -131,3 +131,11 @@ export const LockIcon: IconComponent = (p) => (
     <path d="M8 11V7a4 4 0 0 1 8 0v4" />
   </Icon>
 );
+
+export const TargetIcon: IconComponent = (p) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <circle cx="12" cy="12" r="5" />
+    <circle cx="12" cy="12" r="1" />
+  </Icon>
+);
