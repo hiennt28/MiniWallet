@@ -1,0 +1,53 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main]
+    paths: ['miniwallet-backend/**', '.github/workflows/backend-ci.yml']
+  pull_request:
+    paths: ['miniwallet-backend/**', '.github/workflows/backend-ci.yml']
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: miniwallet-backend
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: miniwallet
+          POSTGRES_PASSWORD: miniwallet
+          POSTGRES_DB: miniwallet_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U miniwallet"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      TEST_DB_URL: jdbc:postgresql://localhost:5432/miniwallet_test
+      DB_USERNAME: miniwallet
+      DB_PASSWORD: miniwallet
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Build and test
+        run: ./mvnw -B verify
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: miniwallet-backend/target/surefire-reports

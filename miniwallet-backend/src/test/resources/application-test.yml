@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    url: ${TEST_DB_URL:jdbc:postgresql://localhost:5432/miniwallet_test}
+  flyway:
+    # Chỉ trong test: cho phép xóa sạch schema để mỗi lần chạy bắt đầu từ DB trống.
+    clean-disabled: false
+
+app:
+  demo-data: false
+  auth:
+    # Khóa cố định chỉ dùng cho test, không dùng ở môi trường thật
+    jwt-secret: dGVzdC1vbmx5LWp3dC1zZWNyZXQta2V5LWZvci1taW5pd2FsbGV0LWJhY2tlbmQ=
