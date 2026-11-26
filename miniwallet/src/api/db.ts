@@ -42,6 +42,7 @@ export function migrateV1(legacy: LegacyDatabaseV1, now: Date = new Date()): Dat
     balance: legacy.balance,
     contacts: Array.isArray(legacy.contacts) ? legacy.contacts : [],
     linkedBanks: [],
+    budgets: {},
     transactions: legacy.transactions,
     createdAt: now.toISOString(),
   };
@@ -61,7 +62,11 @@ function readJson(key: string): unknown {
 export function normalizeDatabase(db: Database): Database {
   const accounts: Database['accounts'] = {};
   for (const [phone, account] of Object.entries(db.accounts)) {
-    accounts[phone] = { ...account, linkedBanks: Array.isArray(account.linkedBanks) ? account.linkedBanks : [] };
+    accounts[phone] = {
+      ...account,
+      linkedBanks: Array.isArray(account.linkedBanks) ? account.linkedBanks : [],
+      budgets: account.budgets && typeof account.budgets === 'object' ? account.budgets : {},
+    };
   }
   return { ...db, accounts };
 }

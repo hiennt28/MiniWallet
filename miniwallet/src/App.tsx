@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom';
 import { GuestOnly, RequireAuth } from './components/auth/RouteGuards';
 import Layout from './components/layout/Layout';
 import BanksPage from './pages/BanksPage';
+import BudgetsPage from './pages/BudgetsPage';
 import { WalletProvider } from './context/WalletContext';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="topup" element={<MoneyMovePage key="topup" mode="topup" />} />
           <Route path="withdraw" element={<MoneyMovePage key="withdraw" mode="withdraw" />} />
           <Route path="banks" element={<BanksPage />} />
+          <Route path="budgets" element={<BudgetsPage />} />
           <Route path="transactions" element={<Transactions />} />
           <Route path="transactions/:id" element={<TransactionDetail />} />
           <Route path="settings" element={<Settings />} />

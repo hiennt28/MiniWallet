@@ -11,12 +11,13 @@ interface TransferConfirmProps {
   recipient: Contact | undefined;
   balance: number;
   needsOtp: boolean;
+  budgetWarning?: string;
   error: string;
   onBack: () => void;
   onConfirm: () => void;
 }
 
-export default function TransferConfirm({ phone, amount, note, recipient, balance, needsOtp, error, onBack, onConfirm }: TransferConfirmProps) {
+export default function TransferConfirm({ phone, amount, note, recipient, balance, needsOtp, budgetWarning, error, onBack, onConfirm }: TransferConfirmProps) {
   const name = recipient?.name ?? 'Người nhận mới';
 
   return (
@@ -49,6 +50,12 @@ export default function TransferConfirm({ phone, amount, note, recipient, balanc
           <dd>{formatVND(balance - amount)}</dd>
         </div>
       </dl>
+
+      {budgetWarning && (
+        <div className="alert alert--warning" role="status">
+          {budgetWarning}
+        </div>
+      )}
 
       {needsOtp && (
         <div className="alert alert--warning">Giao dịch từ {formatVND(TRANSFER_LIMITS.otpFrom)} trở lên cần xác thực thêm bằng mã OTP sau khi nhập PIN.</div>

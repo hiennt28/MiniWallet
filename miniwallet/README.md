@@ -1,6 +1,6 @@
 # MiniWallet – Ví điện tử mini
 
-Ứng dụng web mô phỏng ví điện tử: đăng nhập bằng **số điện thoại + mã PIN**, xem số dư, thống kê chi tiêu, tra cứu lịch sử giao dịch, **nạp/rút qua ngân hàng liên kết** và **chuyển tiền có xác thực PIN/OTP**.
+Ứng dụng web mô phỏng ví điện tử: đăng nhập bằng **số điện thoại + mã PIN**, xem số dư, thống kê chi tiêu, tra cứu lịch sử giao dịch, **nạp/rút qua ngân hàng liên kết**, **đặt ngân sách theo danh mục** và **chuyển tiền có xác thực PIN/OTP**.
 Dữ liệu là giả lập và chạy hoàn toàn trên trình duyệt, nên không cần backend: tải về là chạy được, deploy chỉ cần một bước.
 
 > Demo: _(thêm link Vercel sau khi deploy)_ · Tài khoản dùng thử: **0912 345 678**, PIN **147258** (có nút "Điền sẵn" ở trang đăng nhập)
@@ -24,11 +24,19 @@ Dữ liệu là giả lập và chạy hoàn toàn trên trình duyệt, nên kh
 - Rút tiền về ngân hàng của mình vẫn tính vào "Tiền ra" của tháng, nhưng **không tính là chi tiêu** trong biểu đồ danh mục.
 - Ví bị khóa khẩn cấp thì chặn cả nạp, rút và liên kết ngân hàng mới.
 
+**Ngân sách theo danh mục**
+- Đặt hạn mức chi tiêu mỗi tháng cho từng danh mục (Ăn uống, Mua sắm, Chuyển tiền...). Rút tiền về ngân hàng của mình và các khoản thu không đặt được ngân sách.
+- Ba trạng thái: **trong hạn mức**, **sắp hết** (từ 80%), **đã vượt**. Danh mục đáng lo nhất luôn xếp lên đầu.
+- **Dự báo theo tốc độ chi**: "với tốc độ hiện tại sẽ chi khoảng X", và gợi ý còn chi được bao nhiêu mỗi ngày để không vượt.
+- **Cảnh báo ngay ở bước xác nhận chuyển tiền** nếu khoản chuyển làm ngân sách "Chuyển tiền" sắp hết hoặc bị vượt.
+- Xem lại 12 tháng gần nhất; tháng đang xem lưu trên URL (`/budgets?month=2026-10`).
+- Thanh tiến độ có `role="progressbar"` và `aria-valuetext`, nên trình đọc màn hình đọc được "Đã chi X trên Y (Z%). Sắp hết".
+
 **Tổng quan**
 - Số dư ví, có nút ẩn/hiện. Trạng thái ẩn được nhớ cho lần mở sau. Nút nhanh: Chuyển tiền, Nạp tiền, Rút tiền.
 - Tổng tiền vào, tiền ra trong tháng.
 - Biểu đồ tròn chi tiêu theo danh mục, **tự vẽ bằng SVG**, không dùng thư viện biểu đồ.
-- 5 giao dịch gần nhất.
+- 5 giao dịch gần nhất và thẻ ngân sách tháng này (3 danh mục đáng lo nhất).
 
 **Lịch sử giao dịch**
 - Tìm kiếm **không phân biệt dấu**: gõ "ca phe" vẫn ra "Cà phê sáng". Tìm được theo tên, lời nhắn và số điện thoại.
@@ -69,7 +77,7 @@ Dữ liệu là giả lập và chạy hoàn toàn trên trình duyệt, nên kh
 | Lưu trữ | `localStorage` (có xử lý khi trình duyệt chặn) |
 | Giao diện | CSS thuần + CSS variables cho chế độ sáng/tối, không dùng thư viện UI |
 | Bảo mật (mô phỏng) | Web Crypto: PBKDF2 để băm PIN, `getRandomValues` cho salt và token |
-| Kiểm thử | Vitest: 90 test cho hàm định dạng, validate, khóa PIN, reducer, đăng nhập/phiên, ngân hàng liên kết, nạp/rút và toàn bộ luồng chuyển tiền của API |
+| Kiểm thử | Vitest: 107 test cho hàm định dạng, validate, khóa PIN, ngân sách và dự báo, reducer, đăng nhập/phiên, ngân hàng liên kết, nạp/rút và toàn bộ luồng chuyển tiền của API |
 
 Chỉ dùng 3 thư viện khi chạy: `react`, `react-dom`, `react-router-dom`.
 
@@ -99,6 +107,8 @@ npm run preview  # xem thử bản build
 | Liên kết ngân hàng | Cài đặt → Quản lý tài khoản ngân hàng → Liên kết mới |
 | Ngân hàng từ chối liên kết | Liên kết số tài khoản có đuôi **0000** |
 | Ngân hàng không đủ tiền | Liên kết số tài khoản có đuôi **1111**, rồi nạp tiền từ tài khoản đó |
+| Ngân sách | Thanh điều hướng → Ngân sách. Tài khoản demo có sẵn đủ 3 trạng thái: đã vượt, sắp hết, bình thường |
+| Cảnh báo vượt ngân sách khi chuyển tiền | Ngân sách → Chuyển tiền → Đặt ngân sách 500.000 ₫, rồi chuyển 600.000 ₫ |
 | Khóa ví khẩn cấp | Cài đặt → Khóa ví khẩn cấp, rồi thử chuyển, nạp hoặc rút tiền; mở khóa bằng PIN |
 | Hết phiên đăng nhập | Để yên 30 phút rồi thao tác, hoặc xóa key `miniwallet:token` trong localStorage |
 | Lỗi validate | Bấm "Tiếp tục" khi chưa nhập gì, hoặc nhập số tiền lớn hơn số dư |
@@ -159,11 +169,13 @@ src/
 │   ├── session.ts            # Phía client: giữ token, báo khi phiên hết hạn (như interceptor 401)
 │   ├── authApi.ts            # Đăng ký, đăng nhập, đăng xuất, khóa/mở khóa ví
 │   ├── bankApi.ts            # Ngân hàng liên kết, nạp tiền, rút tiền
+│   ├── budgetApi.ts          # Ngân sách theo tháng: xem, đặt, xóa hạn mức
 │   ├── walletApi.ts          # Số dư, giao dịch, chuyển tiền (PIN + OTP)
 │   └── errors.ts             # ApiError và các mã lỗi
 ├── components/
 │   ├── auth/                 # AuthLayout, PinInput, PinConfirm (bước nhập PIN dùng chung), RequireAuth / GuestOnly
 │   ├── money/                # BankBadge, moneyMoveReducer (luồng nạp/rút)
+│   ├── budget/               # BudgetRow (thanh tiến độ), BudgetDialog, BudgetCard
 │   ├── common/               # Button, Field, Modal, Switch, Money, Pagination, States...
 │   ├── charts/DonutChart.tsx # Biểu đồ tròn SVG
 │   ├── layout/Layout.tsx     # Thanh bên / thanh dưới + <Outlet />
@@ -175,9 +187,9 @@ src/
 │   └── walletReducer.ts
 ├── data/                     # Danh mục, ngân hàng, dữ liệu mẫu (sinh ngẫu nhiên có seed cố định)
 ├── hooks/                    # useAsync, useNow, useTheme
-├── pages/                    # Login, Register, Dashboard, Transactions, TransactionDetail, TransferPage, MoneyMovePage, BanksPage, Settings, NotFound
+├── pages/                    # Login, Register, Dashboard, Transactions, TransactionDetail, TransferPage, MoneyMovePage, BanksPage, BudgetsPage, Settings, NotFound
 ├── styles/                   # base.css (biến màu, bố cục), components.css, pages.css
-├── utils/                    # format, validators, lọc/thống kê, crypto (băm PIN), security (khóa PIN)
+├── utils/                    # format, validators, lọc/thống kê, budget (ngân sách, dự báo), crypto (băm PIN), security (khóa PIN)
 └── types.ts                  # Kiểu dữ liệu dùng chung: Transaction, Database, OtpTicket...
 ```
 
@@ -191,6 +203,8 @@ Test nằm cạnh file được test (`*.test.ts`).
 - **Để TypeScript chặn trạng thái sai.** Action của reducer là union có phân biệt (discriminated union), mã lỗi API là kiểu liệt kê `ApiErrorCode`, và dữ liệu đọc từ URL hay localStorage được kiểm tra trước khi dùng (`isCategoryKey`, `isDatabase`).
 - **Bảo mật đặt ở "server", giao diện chỉ báo sớm.** Kiểm tra PIN, khóa PIN và khóa ví nằm trong API. Giao diện có ẩn nút hay không thì gọi thẳng API vẫn bị chặn. Dữ liệu được kiểm tra trước PIN, nên gõ sai số tiền không làm mất lượt thử PIN.
 - **Biết giới hạn của bản mô phỏng.** PIN 6 số chỉ có 1 triệu khả năng nên băm không đủ để chống dò; thứ thực sự bảo vệ là giới hạn số lần sai, và ở hệ thống thật việc này phải làm ở server. Token đang để trong localStorage vì không có server; thực tế nên dùng cookie `httpOnly` để mã XSS không đọc được.
+- **Tính ngân sách bằng hàm thuần nhận `now` làm tham số.** `buildBudgetOverview(transactions, budgets, month, now)` không tự đọc đồng hồ, nên test được ngày đầu tháng (không chia cho 0), cuối tháng và tháng đã qua mà không cần giả lập thời gian.
+- **Dữ liệu demo luôn trình diễn được.** Dữ liệu mẫu sinh theo ngày hiện tại nên hạn mức cố định có lúc không có danh mục nào "sắp hết". Hạn mức demo được tính từ chính số đã chi trong tháng, có test kiểm tra luôn đủ 3 trạng thái.
 - **Một bước xác nhận PIN dùng chung.** `PinConfirm` dùng cho chuyển tiền, nạp và rút; nạp và rút dùng chung một trang (`MoneyMovePage`) chỉ khác `mode`, còn hạn mức và câu chữ nằm trong bảng cấu hình.
 - **Dữ liệu cũ vẫn chạy khi thêm trường mới.** `normalizeDatabase()` bổ sung `linkedBanks` cho dữ liệu đã lưu từ bản trước, không cần xóa localStorage.
 - **Mỗi lần đăng nhập là một state ví mới.** `WalletProvider` nằm trong vùng đã đăng nhập, nên đăng xuất rồi đăng nhập tài khoản khác không bị sót dữ liệu của người trước.

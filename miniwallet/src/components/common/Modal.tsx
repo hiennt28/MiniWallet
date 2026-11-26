@@ -9,7 +9,11 @@ interface ModalProps {
   footer?: ReactNode;
 }
 
-/** Hộp thoại: đóng bằng Esc hoặc bấm ra ngoài, trả focus về chỗ cũ khi đóng. */
+/**
+ * Hộp thoại: đóng bằng Esc hoặc bấm ra ngoài, trả focus về chỗ cũ khi đóng.
+ * Khi mở, focus vào ô nhập đầu tiên (nếu có), không thì vào chính hộp thoại.
+ * Không dùng autoFocus cho ô nhập bên trong: autoFocus chạy trước effect này nên sẽ làm mất chỗ focus cũ.
+ */
 export default function Modal({ open, title, onClose, children, footer }: ModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
   const onCloseRef = useRef(onClose);
@@ -24,7 +28,8 @@ export default function Modal({ open, title, onClose, children, footer }: ModalP
     };
     document.addEventListener('keydown', onKeyDown);
     document.body.style.overflow = 'hidden';
-    dialogRef.current?.focus();
+    const firstField = dialogRef.current?.querySelector<HTMLElement>('input:not([disabled]), select:not([disabled]), textarea:not([disabled])');
+    (firstField ?? dialogRef.current)?.focus();
     return () => {
       document.removeEventListener('keydown', onKeyDown);
       document.body.style.overflow = '';

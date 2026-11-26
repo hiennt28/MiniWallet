@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useWallet } from '../../context/WalletContext';
 import { formatPhone } from '../../utils/format';
 import { cx } from '../../utils/cx';
-import { HomeIcon, ListIcon, LockIcon, LogOutIcon, SendIcon, SettingsIcon } from '../icons';
+import { HomeIcon, ListIcon, LockIcon, LogOutIcon, SendIcon, SettingsIcon, TargetIcon } from '../icons';
 import Avatar from '../common/Avatar';
 import { ErrorState, Skeleton } from '../common/States';
 
@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { to: '/', label: 'Tổng quan', icon: HomeIcon, end: true },
   { to: '/transfer', label: 'Chuyển tiền', icon: SendIcon },
   { to: '/transactions', label: 'Lịch sử', icon: ListIcon },
+  { to: '/budgets', label: 'Ngân sách', icon: TargetIcon },
   { to: '/settings', label: 'Cài đặt', icon: SettingsIcon },
 ];
 

@@ -164,7 +164,10 @@
 }
 
 /* --- Form --- */
+/* Tự là flex để dùng được cả khi không nằm trong .card (hộp thoại, trang đăng nhập) */
 .form {
+  display: flex;
+  flex-direction: column;
   gap: 1.15rem;
 }
 
@@ -428,6 +431,11 @@
 
 .modal__body {
   color: var(--color-muted);
+}
+
+/* Form trong hộp thoại dùng màu chữ thường cho nhãn và ô nhập, chỉ đoạn mô tả mới xám */
+.modal__body .form {
+  color: var(--color-text);
 }
 
 .modal__footer {

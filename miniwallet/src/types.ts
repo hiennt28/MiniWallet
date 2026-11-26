@@ -85,6 +85,37 @@ export interface LinkedBankView {
   linkedAt: string;
 }
 
+/** Hạn mức chi tiêu theo danh mục, đơn vị đồng. Danh mục không có nghĩa là chưa đặt. */
+export type Budgets = Partial<Record<CategoryKey, number>>;
+
+export type BudgetStatus = 'ok' | 'warning' | 'over';
+
+export interface BudgetItem {
+  category: CategoryKey;
+  limit: number;
+  spent: number;
+  /** spent / limit, có thể lớn hơn 1. */
+  ratio: number;
+  status: BudgetStatus;
+  /** Ước tính tổng chi tới cuối tháng theo tốc độ hiện tại (tháng đã qua thì bằng spent). */
+  projected: number;
+  /** Còn có thể chi mỗi ngày tới hết tháng để không vượt (0 nếu đã vượt hoặc tháng đã qua). */
+  dailyAllowance: number;
+}
+
+export interface BudgetOverview {
+  /** "YYYY-MM" */
+  month: string;
+  isCurrentMonth: boolean;
+  /** Số ngày còn lại trong tháng, tính cả hôm nay (0 với tháng đã qua). */
+  daysLeft: number;
+  items: BudgetItem[];
+  /** Danh mục chi tiêu có thể đặt ngân sách nhưng chưa đặt, kèm số đã chi. */
+  unbudgeted: CategoryTotal[];
+  totalLimit: number;
+  totalSpent: number;
+}
+
 export interface Account {
   profile: Profile;
   pin: PinCredentials;
@@ -92,6 +123,8 @@ export interface Account {
   balance: number;
   contacts: Contact[];
   linkedBanks: LinkedBank[];
+  /** Hạn mức chi tiêu mỗi tháng theo danh mục (áp dụng cho mọi tháng). */
+  budgets: Budgets;
   transactions: Transaction[];
   createdAt: string;
 }

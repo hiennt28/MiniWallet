@@ -214,7 +214,6 @@ export default function Settings() {
             {(props) => (
               <PinInput
                 {...props}
-                autoFocus
                 value={pin}
                 onChange={(v) => {
                   setPin(v);

@@ -3,7 +3,7 @@
  * Dùng bộ sinh số ngẫu nhiên có seed cố định nên lần nào tạo lại cũng ra cùng một bộ dữ liệu.
  */
 import { INITIAL_SECURITY } from '../utils/security';
-import type { Account, CategoryKey, Contact, Database, PinCredentials, Profile, Transaction } from '../types';
+import type { Account, Budgets, CategoryKey, Contact, Database, PinCredentials, Profile, Transaction } from '../types';
 
 export const PROFILE: Profile = { name: 'Nguyễn Văn An', phone: '0912345678' };
 
@@ -28,6 +28,42 @@ export const CONTACTS: Contact[] = [
 ];
 
 export const INITIAL_BALANCE = 8_450_000;
+
+/** Ngân sách mặc định khi tháng hiện tại chưa chi gì (ví dụ ngày đầu tháng). */
+export const DEMO_BUDGETS: Budgets = {
+  food: 1_500_000,
+  transport: 800_000,
+  shopping: 3_000_000,
+  entertainment: 1_000_000,
+};
+
+/** Tỉ lệ đã chi / hạn mức mong muốn cho từng danh mục, theo thứ tự chi nhiều → ít. */
+const DEMO_BUDGET_RATIOS = [1.15, 0.88, 0.55, 0.35];
+
+/**
+ * Hạn mức mẫu tính từ chi tiêu tháng hiện tại để lúc mở demo luôn thấy đủ
+ * "Đã vượt" / "Sắp hết" / "Bình thường". Hóa đơn và chuyển tiền để trống để thấy mục "Chưa đặt".
+ */
+export function createDemoBudgets(transactions: Transaction[], now: Date): Budgets {
+  const keys = Object.keys(DEMO_BUDGETS) as CategoryKey[];
+  const spent = new Map<CategoryKey, number>();
+  for (const tx of transactions) {
+    const d = new Date(tx.createdAt);
+    if (tx.type !== 'expense' || d.getFullYear() !== now.getFullYear() || d.getMonth() !== now.getMonth()) continue;
+    spent.set(tx.category, (spent.get(tx.category) ?? 0) + tx.amount);
+  }
+
+  const budgets: Budgets = {};
+  keys
+    .sort((a, b) => (spent.get(b) ?? 0) - (spent.get(a) ?? 0))
+    .forEach((key, i) => {
+      const value = spent.get(key) ?? 0;
+      const ratio = DEMO_BUDGET_RATIOS[i] ?? 0.5;
+      const limit = Math.round(value / ratio / 10_000) * 10_000;
+      budgets[key] = limit >= 50_000 ? limit : DEMO_BUDGETS[key];
+    });
+  return budgets;
+}
 
 type ExpenseKey = Extract<CategoryKey, 'food' | 'shopping' | 'transport' | 'bills' | 'entertainment'>;
 
@@ -141,6 +177,7 @@ export function createDemoTransactions(now: Date = new Date(), seed = 2026): Tra
 }
 
 export function createDemoAccount(now: Date = new Date()): Account {
+  const transactions = createDemoTransactions(now);
   return {
     profile: { ...PROFILE },
     pin: { ...DEMO_PIN_CREDENTIALS },
@@ -156,7 +193,8 @@ export function createDemoAccount(now: Date = new Date()): Account {
         linkedAt: new Date(now.getFullYear(), now.getMonth() - 2, 1).toISOString(),
       },
     ],
-    transactions: createDemoTransactions(now),
+    budgets: createDemoBudgets(transactions, now),
+    transactions,
     createdAt: new Date(now.getFullYear(), now.getMonth() - 2, 1).toISOString(),
   };
 }
